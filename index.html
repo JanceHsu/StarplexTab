@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新标签页</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- 背景层 -->
+    <div id="background-layer"></div>
+
+    <!-- 半透明遮罩层 -->
+    <div id="overlay"></div>
+
+    <!-- 主内容容器 -->
+    <div class="container">
+        <!-- 顶部区域 -->
+        <div class="top-section">
+            <div class="title-div">
+                <!-- 标题/Logo区域 -->
+                <div id="title-area" class="title-area">
+                    <span id="custom-title"></span>
+                </div>
+            </div>
+
+            <div class="title-div"></div>
+            <!-- 设置按钮 -->
+            <button id="settings-btn" class="settings-btn">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 搜索区域 -->
+    <div class="search-container">
+        <form id="search-form" class="search-form" autocomplete="off">
+            <div class="search-box">
+                <div class="search-input-container" id="search-input-container">
+                    <input type="text" id="search-input" class="search-input" placeholder="加载中……" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                </div>
+                <div id="search-history-list" class="search-history-list"></div>
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                    <span class="search-btn-text">搜索</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 快速链接区域 -->
+    <div id="quick-links-container" class="quick-links-container"></div>
+    </div>
+
+    <!-- 设置面板遮罩 -->
+    <div id="settings-overlay" class="settings-overlay hidden"></div>
+
+    <!-- 设置面板 -->
+    <div id="settings-panel" class="settings-panel hidden">
+        <div class="settings-header">
+            <h2>设置</h2>
+            <button id="close-settings" class="close-settings">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="settings-content">
+            <!-- 搜索引擎设置 -->
+            <div class="settings-section">
+                <h3>搜索引擎</h3>
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="search-engine" value="google" checked>
+                        <span>Google</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="search-engine" value="bing">
+                        <span>Bing</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="search-engine" value="yandex">
+                        <span>Yandex</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="search-engine" value="baidu">
+                        <span>Baidu</span>
+                    </label>
+                </div>
+
+
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- 历史记录设置 -->
+            <div class="settings-section">
+                <h3>历史记录</h3>
+                <div class="setting-item">
+                    <label class="setting-label">显示历史记录</label>
+                    <label class="switch">
+                        <input type="checkbox" id="show-history-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">最多可以保存10条历史记录</label>
+                    <label id="clear-history-btn" class="clear-history-btn">
+                        <i class="fas fa-trash"></i> 清除历史记录
+                    </label>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- 快速链接设置 -->
+            <div class="settings-section">
+                <h3>快速链接</h3>
+                <div class="setting-item">
+                    <label class="setting-label">启用快速链接</label>
+                    <label class="switch">
+                        <input type="checkbox" id="quick-links-toggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div id="quick-links-editor" class="quick-links-editor">
+                    <h3>管理快速链接</h3>
+                    <label class="setting-label">最多可以添加10个快速链接</label>
+                    <div id="links-list" class="links-list">
+                        <!-- 快速链接将在这里动态生成 -->
+                    </div>
+                    <button id="add-link-btn" class="add-link-btn">
+                        <i class="fas fa-plus"></i> 添加链接
+                    </button>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- 标题设置 -->
+            <div class="settings-section">
+                <h3>标题</h3>
+                <div class="setting-item">
+                    <label class="setting-label">显示标题</label>
+                    <label class="switch">
+                        <input type="checkbox" id="show-title-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label" for="custom-title-input">自定义标题文字</label>
+                    <input type="text" id="custom-title-input" class="text-input" placeholder="请输入标题文字">
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- 背景设置 -->
+            <div class="settings-section">
+                <h3>背景</h3>
+                <label class="setting-label">背景来源</label>
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="bg-type" value="bing" checked>
+                        <span>每日一图</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="bg-type" value="color">
+                        <span>纯色背景</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="bg-type" value="image">
+                        <span>本地图片</span>
+                    </label>
+                </div>
+
+                <!-- 纯色背景设置 -->
+                <div class="setting-item bg-color-setting hidden">
+                    <label class="setting-label" for="bg-color-picker">背景颜色</label>
+                    <input type="color" id="bg-color-picker" class="color-picker" value="#ffffff">
+                </div>
+
+                <!-- 本地图片设置 -->
+                <div class="setting-item bg-image-setting hidden">
+                    <label class="setting-label block-label">选择图片</label>
+                    <div class="image-upload-container">
+                        <label for="bg-image-upload" class="image-upload-btn">
+                            <i class="fas fa-upload"></i> 选择图片
+                        </label>
+                        <input type="file" id="bg-image-upload" class="image-upload" accept="image/*">
+                    </div>
+                    <div id="image-preview-container" class="image-preview-container hidden">
+                        <p class="preview-label">图片预览</p>
+                        <img id="image-preview" class="image-preview" src="" alt="图片预览">
+                    </div>
+                </div>
+
+
+                <div class="setting-item">
+                    <label class="setting-label" for="overlay-opacity" style="margin-top: 8px;">不透明度</label>
+                    <div class="opacity-control">
+                        <input type="range" id="overlay-opacity" min="0" max="100" value="50" class="opacity-slider">
+                        <span class="opacity-value">50%</span>
+                    </div>
+                    <div class="opacity-labels">
+                        <span>透明</span>
+                        <span style="color: var(--theme-color);">不透明</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- 主题色设置 -->
+            <div class="settings-section">
+                <h3>主题色</h3>
+                <div class="setting-item">
+                    <label class="setting-label" for="theme-color-picker">选择主题颜色</label>
+                    <div class="theme-color-controls">
+                        <input type="color" id="theme-color-picker" class="color-picker" value="#6366f1">
+                        <!-- <div id="theme-color-preview" class="theme-color-preview"></div> -->
+                    </div>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- 显示模式设置 -->
+            <div class="settings-section">
+                <h3>显示模式</h3>
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="display-mode" value="system" checked>
+                        <span>跟随系统</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="display-mode" value="light">
+                        <span>浅色模式</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="display-mode" value="dark">
+                        <span>深色模式</span>
+                    </label>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- 设置管理 -->
+            <div class="settings-section">
+                <h3>设置管理</h3>
+                <div class="setting-item">
+                    <label class="setting-label">导入设置</label>
+                    <div class="import-export-controls">
+                        <label for="import-settings" class="import-btn">
+                            <i class="fas fa-upload"></i> 导入
+                        </label>
+                        <input type="file" id="import-settings" class="import-input" accept=".json">
+                        <span id="import-filename" class="import-filename">未选择文件</span>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">导出设置</label>
+                    <label id="export-settings" class="export-btn">
+                        <i class="fas fa-download"></i> 导出
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">重置</label>
+                    <button id="reset-settings" class="reset-btn">
+                        <i class="fas fa-redo"></i> 重置为默认值
+                    </button>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- 关于 -->
+            <div class="settings-section">
+                <h3>关于</h3>
+                <div class="setting-item">
+                    <label class="setting-label" style="font-weight: 700;">星函标签页<br>STARPLEX TAB</label>
+                    <label class="setting-label">让你的新标签页从此兼得简洁与实用</label>
+                    <label class="setting-label" style="width: 100%; display: flex;">
+                        <label style="width: 50%; text-align: left;">版本</label>
+                        <label style="width: 50%; text-align: right;">1.1.27</label>
+                    </label>
+                    <label class="setting-label" style="width: 100%; display: flex;">
+                        <label style="width: 50%; text-align: left;">制作</label>
+                        <label style="width: 50%; text-align: right;">Jance</label>
+                    </label>
+                    <label class="setting-label" style="width: 100%; display: flex;">
+                        <label style="width: 50%; text-align: left;">更新日志</label>
+                        <label style="width: 50%; text-align: right;"><a href="./log.html">点击查看</a></label>
+                    </label>
+                </div>
+            </div>
+
+            <!-- <hr class="section-divider"> -->
+
+            <!-- 版权信息 -->
+            <!-- <div class="settings-section">
+                <div class="setting-item">
+                    <label class="setting-label" style="width: 100%; display: flex;">
+                        <label
+                            style="width: 100%; text-align: left;">使用“星函标签页”插件即代表您了解：“星函标签页”插件仅供学习交流使用，禁止用于商业用途。</label>
+                    </label>
+                    <label class="setting-label" style="width: 100%; display: flex;">
+                        <label
+                            style="width: 100%; text-align: left;">本插件使用的“每日一图”来自微软必应壁纸，仅作为本插件的可选壁纸使用，不用于其他用途。</label>
+                    </label>
+                </div>
+            </div> -->
+
+        </div>
+
+        <div class="settings-footer">
+            <button id="apply-settings" class="apply-settings-btn">保存设置</button>
+        </div>
+    </div>
+
+    <!-- 提示框 -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="app.js"></script>
+    <script src="settings.js"></script>
+</body>
+
+</html>
