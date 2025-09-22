@@ -11,9 +11,27 @@ let showTitle = true;
 let customTitleText = '星函标签页';
 let showSearchHistoryEnabled = true;
 let isRemovingHistory = false;
+let settingsBackup = null; // 用于重置设置时的备份
+let engineSwitchEnabled = true;
+let bgInfoEnabled = true;
 
+// 主题色变量
 const lightBg = '#ffffff';
 const darkBg = '#1a1a1a';
+
+// 存储必应图片信息
+let bingImageInfo = {
+    desc: '',
+    url: ''
+};
+
+// 搜索引擎信息映射
+const ENGINE_INFO = {
+    google: { name: 'Google', icon: '<i class="fab fa-google"></i>' },
+    bing: { name: 'Bing', icon: '<i class="fab fa-microsoft"></i>' },
+    yandex: { name: 'Yandex', icon: '<i class="fab fa-yandex"></i>' },
+    baidu: { name: 'Baidu', icon: '<i class="fas fa-globe"></i>' }
+};
 
 // DOM 元素
 const searchForm = document.getElementById('search-form');
@@ -54,6 +72,14 @@ const customTitle = document.getElementById('custom-title');
 const clearSearchHistoryBtn = document.getElementById('clear-history-btn');
 const showSearchHistoryToggle = document.getElementById('show-history-toggle');
 const showSearchInputContainer = document.getElementById('search-input-container');
+const searchEngineQuickRadios = document.querySelectorAll('input[name="search-engine-quick"]');
+const engineSwitcherBtn = document.getElementById('engine-switcher-btn');
+const engineSwitcherName = document.getElementById('engine-switcher-name');
+const engineSwitcherDropdown = document.getElementById('engine-switcher-dropdown');
+const bgInfoBtn = document.getElementById('bg-info-btn');
+const engineSwitchToggle = document.getElementById('engine-switch-toggle');
+const bgInfoToggle = document.getElementById('bg-info-toggle');
+const engineSwitcherCaret = document.getElementById('engine-switcher-caret');
 
 // 初始化函数
 function init() {
@@ -67,6 +93,13 @@ function init() {
     if (currentBgType === 'bing') {
         fetchBingImage();
     }
+
+    updateEngineSwitcherVisible();
+    updateBgInfoBtnVisible();
+    updateEngineSwitcherUI();
+    setupEngineSwitcherEvents();
+    setSearchEngine(currentEngine); // 保证按钮组和设置面板同步
+    setSearchEngineName();
 }
 
 // 设置所有事件监听器
@@ -76,6 +109,9 @@ function setupEventListeners() {
 
     // 设置按钮点击
     settingsBtn.addEventListener('click', openSettings);
+
+    // 显示背景信息
+    bgInfoBtn.addEventListener('click', showBgInfo);
 
     // 关闭设置面板
     closeSettingsBtn.addEventListener('click', closeSettings);
@@ -90,9 +126,14 @@ function setupEventListeners() {
             return; // 不保存、不收起设置面板
         }
         saveSettings();
+        settingsBackup = null; // 清空缓存，表示已保存
+
         closeSettings();
+
         updateQuickLinksDisplay(); // 应用设置后立即更新快速链接显示
-        setSearchEngineName()
+        setSearchEngineName();
+        updateEngineSwitcherUI();
+        updateTitleDisplay();
         showToast('设置已保存');
     });
 
@@ -104,6 +145,18 @@ function setupEventListeners() {
                 switchBgType(currentBgType);
             }
         });
+    });
+
+    // 搜索引擎切换功能开关
+    engineSwitchToggle.addEventListener('change', function () {
+        engineSwitchEnabled = this.checked;
+        updateEngineSwitcherVisible();
+    });
+
+    // 背景信息功能开关
+    bgInfoToggle.addEventListener('change', function () {
+        bgInfoEnabled = this.checked;
+        updateBgInfoBtnVisible();
     });
 
     // 背景颜色变化
@@ -203,6 +256,19 @@ function setupEventListeners() {
 
     // 失焦时隐藏历史
     searchInput.addEventListener('blur', hideSearchHistory);
+
+    // 搜索框下方快速切换搜索引擎
+    searchEngineQuickRadios.forEach(radio => {
+        radio.addEventListener('change', function () {
+            if (this.checked) {
+                setSearchEngine(this.value);
+                setSearchEngineName();
+                // 同步设置面板
+                searchEngineRadios.forEach(r => r.checked = r.value === this.value);
+            }
+        });
+    });
+
 }
 
 // 处理搜索提交
@@ -233,8 +299,23 @@ function handleSearch(e) {
     }
 }
 
+
 // 打开设置面板
 function openSettings() {
+    // 缓存当前设置
+    settingsBackup = {
+        currentEngine,
+        currentBgType,
+        currentThemeColor,
+        currentDisplayMode,
+        overlayOpacity,
+        quickLinksEnabled,
+        quickLinks: JSON.parse(JSON.stringify(quickLinks)), // 深拷贝
+        showTitle,
+        customTitleText,
+        showSearchHistoryEnabled
+    };
+
     settingsOverlay.classList.remove('hidden');
     settingsPanel.classList.remove('hidden');
     // 添加动画效果
@@ -248,11 +329,68 @@ function openSettings() {
 function closeSettings() {
     settingsOverlay.style.opacity = '0';
     settingsPanel.style.transform = 'translateX(100%)';
+
+    // 恢复未保存的设置
+    if (settingsBackup) {
+        // 恢复变量
+        currentEngine = settingsBackup.currentEngine;
+        currentBgType = settingsBackup.currentBgType;
+        currentThemeColor = settingsBackup.currentThemeColor;
+        currentDisplayMode = settingsBackup.currentDisplayMode;
+        overlayOpacity = settingsBackup.overlayOpacity;
+        quickLinksEnabled = settingsBackup.quickLinksEnabled;
+        quickLinks = JSON.parse(JSON.stringify(settingsBackup.quickLinks));
+        showTitle = settingsBackup.showTitle;
+        customTitleText = settingsBackup.customTitleText;
+        showSearchHistoryEnabled = settingsBackup.showSearchHistoryEnabled;
+
+        // 恢复UI
+        setSearchEngine(currentEngine);
+        setSearchEngineName();
+        themeColorPicker.value = currentThemeColor;
+        document.documentElement.style.setProperty('--theme-color', currentThemeColor);
+        displayModeRadios.forEach(radio => {
+            radio.checked = radio.value === currentDisplayMode;
+        });
+        updateDisplayMode();
+        overlayOpacitySlider.value = overlayOpacity;
+        overlayOpacityValue.textContent = `${overlayOpacity}%`;
+        updateOverlayOpacity();
+        quickLinksToggle.checked = quickLinksEnabled;
+        updateQuickLinksToggleUI();
+        updateQuickLinksEditor();
+        showTitleToggle.checked = showTitle;
+        customTitleInput.value = customTitleText;
+        updateTitleDisplay();
+        showSearchHistoryToggle.checked = showSearchHistoryEnabled;
+        updateSearchHistoryDisplay();
+        switchBgType(currentBgType);
+
+        // 其它UI恢复
+        bgTypeRadios.forEach(radio => {
+            radio.checked = radio.value === currentBgType;
+        });
+        bgColorPicker.value = (currentBgType === 'color') ? backgroundLayer.style.background : bgColorPicker.value;
+
+        showToast('设置未保存');
+    }
+
     // 动画结束后隐藏元素
     setTimeout(() => {
         settingsOverlay.classList.add('hidden');
         settingsPanel.classList.add('hidden');
     }, 300);
+}
+
+// 更新搜索引擎切换按钮显示状态
+function updateEngineSwitcherVisible() {
+    const container = document.querySelector('.engine-switcher-container');
+    if (container) container.style.display = engineSwitchEnabled ? 'flex' : 'none';
+}
+
+// 更新背景信息按钮显示状态
+function updateBgInfoBtnVisible() {
+    if (bgInfoBtn) bgInfoBtn.style.display = bgInfoEnabled ? 'flex' : 'none';
 }
 
 // 切换背景类型
@@ -331,6 +469,53 @@ function setSearchEngine(engine) {
     currentEngine = engine;
     searchEngineRadios.forEach(radio => {
         radio.checked = radio.value === engine;
+    });
+    updateEngineSwitcherUI();
+}
+
+// 更新顶部搜索引擎按钮UI
+function updateEngineSwitcherUI() {
+    if (!engineSwitcherBtn) return;
+    const info = ENGINE_INFO[currentEngine] || ENGINE_INFO.bing;
+    engineSwitcherName.textContent = info.name;
+}
+
+// 顶部搜索引擎切换按钮事件
+function setupEngineSwitcherEvents() {
+    if (!engineSwitcherBtn) return;
+    // 展开/收起下拉
+    engineSwitcherBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        engineSwitcherDropdown.classList.toggle('hidden');
+        // 切换箭头方向
+        if (engineSwitcherDropdown.classList.contains('hidden')) {
+            engineSwitcherCaret.classList.remove('fa-caret-up');
+            engineSwitcherCaret.classList.add('fa-caret-down');
+        } else {
+            engineSwitcherCaret.classList.remove('fa-caret-down');
+            engineSwitcherCaret.classList.add('fa-caret-up');
+        }
+    });
+    // 选项点击
+    engineSwitcherDropdown.querySelectorAll('.engine-option').forEach(opt => {
+        opt.addEventListener('click', function () {
+            const engine = this.getAttribute('data-engine');
+            setSearchEngine(engine);
+            setSearchEngineName();
+            updateEngineSwitcherUI();
+            engineSwitcherDropdown.classList.add('hidden');
+            // 同步设置面板
+            searchEngineRadios.forEach(r => r.checked = r.value === engine);
+            // 收起时箭头恢复向下
+            engineSwitcherCaret.classList.remove('fa-caret-up');
+            engineSwitcherCaret.classList.add('fa-caret-down');
+        });
+    });
+    // 点击外部关闭下拉
+    document.addEventListener('click', function () {
+        engineSwitcherDropdown.classList.add('hidden');
+        engineSwitcherCaret.classList.remove('fa-caret-up');
+        engineSwitcherCaret.classList.add('fa-caret-down');
     });
 }
 
@@ -420,16 +605,30 @@ function updateQuickLinksEditor() {
 
         linksList.appendChild(linkItem);
 
-        // 添加输入事件监听器
+        // 先获取输入框
         const nameInput = linkItem.querySelector('.link-name');
         const urlInput = linkItem.querySelector('.link-url');
 
+        // 实时更新名称数据
         nameInput.addEventListener('input', function () {
             quickLinks[index].name = this.value;
         });
 
+        // 实时更新网址数据
         urlInput.addEventListener('input', function () {
             quickLinks[index].url = this.value;
+        });
+
+        // 失焦时自动补全HTTPS协议
+        urlInput.addEventListener('blur', function () {
+            let val = this.value.trim();
+            // 如果已经有 http:// 或 https://，不处理
+            if (/^https?:\/\//i.test(val)) return;
+            // 简单判断是否为网址格式（有点号且无空格）
+            if (/^[^\s]+\.[^\s]+$/.test(val)) {
+                this.value = 'https://' + val;
+                quickLinks[index].url = this.value;
+            }
         });
 
         // 添加删除事件监听器
@@ -463,6 +662,8 @@ function updateQuickLinksEditor() {
                 updateQuickLinksEditor();
             } else showToast('已经是最后一个快速链接了');
         });
+
+
 
         // 保持滚动位置在底部
         linksList.scrollTop = linksList.scrollHeight;
@@ -536,34 +737,114 @@ function showToast(message) {
     }, 3000);
 }
 
-// 获取必应图片
+// 获取必应图片（带本地缓存）
 function fetchBingImage() {
-    // 使用代理获取必应每日图片
+    const cache = JSON.parse(localStorage.getItem('bingBgCache') || '{}');
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (cache.date === today && cache.url) {
+        setBingBg(cache.url);
+        if (cache.desc) {
+            bingImageInfo = {
+                desc: cache.desc || '',
+                url: cache.url
+            };
+        }
+        return;
+    }
+
     fetch('https://bing.biturl.top/')
         .then(response => response.json())
         .then(data => {
             if (data && data.url) {
-                const imageUrl = data.url;
-                backgroundLayer.style.backgroundImage = `url(${imageUrl})`;
-                backgroundLayer.style.backgroundSize = 'cover';
-                backgroundLayer.style.backgroundPosition = 'center';
-                backgroundLayer.style.backgroundRepeat = 'no-repeat';
-
-                // 保存到本地存储
-                localStorage.setItem('bingBgImage', imageUrl);
+                setBingBg(data.url);
+                bingImageInfo = {
+                    desc: data.copyright || '',
+                    url: data.url
+                };
+                // 缓存到本地
+                localStorage.setItem('bingBgCache', JSON.stringify({
+                    date: today,
+                    url: data.url,
+                    desc: data.copyright || ''
+                }));
             }
         })
         .catch(error => {
             console.error('获取必应图片失败:', error);
-            // 尝试使用本地存储的图片
-            const savedImage = localStorage.getItem('bingBgImage');
-            if (savedImage) {
-                backgroundLayer.style.backgroundImage = `url(${savedImage})`;
-                backgroundLayer.style.backgroundSize = 'cover';
-                backgroundLayer.style.backgroundPosition = 'center';
-                backgroundLayer.style.backgroundRepeat = 'no-repeat';
-            }
+            if (cache.url) setBingBg(cache.url);
         });
+}
+
+// 设置背景图片
+function setBingBg(imageUrl) {
+    backgroundLayer.style.backgroundImage = `url(${imageUrl})`;
+    backgroundLayer.style.backgroundSize = 'cover';
+    backgroundLayer.style.backgroundPosition = 'center';
+    backgroundLayer.style.backgroundRepeat = 'no-repeat';
+}
+
+// 展示背景信息（HTML）
+function showBgInfo() {
+    let msg = '';
+    if (currentBgType === 'bing') {
+        msg = `<b>每日一图</b><br><br>`;
+        if (bingImageInfo.desc) {
+            // 拆分描述和版权
+            const match = bingImageInfo.desc.match(/^(.*?)(（|\()(.+?)(）|\))$/);
+            if (match) {
+                // match[1]：描述，match[3]：版权
+                msg += `${match[1].trim()}<br><span style="color:#888;font-size:0.98em;">${match[3].trim()}<br>Microsoft Bing</span>`;
+            } else {
+                msg += bingImageInfo.desc;
+            }
+        } else {
+            msg += '暂无图片信息';
+        }
+    } else if (currentBgType === 'color') {
+        // 获取当前背景色
+        let color = bgColorPicker.value;
+        // 转为RGB
+        function hexToRgb(hex) {
+            hex = hex.replace('#', '');
+            if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+            const num = parseInt(hex, 16);
+            return `RGB(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255})`;
+        }
+        msg = `<b>纯色背景</b><br><br>十六进制颜色：${color}<br>RGB颜色：${hexToRgb(color)}`;
+    } else if (currentBgType === 'image') {
+        let img = localStorage.getItem('customBgImage');
+        if (img) {
+            // 只显示前30字符，避免太长
+            const shortUrl = img.slice(0, 30) + '...';
+            msg = `<b>图片背景</b><br><br>
+            <img src="${img}" alt="本地图片" style="max-width:180px;max-height:80px;display:block;margin:0 auto 10px auto;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"><br>
+            <span style="font-size:0.95em;color:#888;">DataURL: ${shortUrl}</span>`;
+        } else {
+            msg = `<b>图片背景</b><br><br>暂无图片`;
+        }
+    }
+    showCustomModal(msg);
+}
+
+// 自定义弹窗，展示背景信息
+function showCustomModal(html) {
+    const modal = document.getElementById('custom-modal');
+    const msg = document.getElementById('custom-modal-message');
+    const okBtn = document.getElementById('custom-modal-ok');
+    const cancelBtn = document.getElementById('custom-modal-cancel');
+
+    msg.innerHTML = html;
+    modal.classList.remove('hidden');
+    cancelBtn.style.display = 'none'; // 只显示确定按钮
+
+    function cleanup() {
+        okBtn.onclick = null;
+        modal.classList.add('hidden');
+        cancelBtn.style.display = ''; // 恢复
+    }
+
+    okBtn.onclick = cleanup;
 }
 
 // 获取搜索历史
@@ -714,6 +995,44 @@ function updateSearchInputContainerBackground(e) {
         showSearchInputContainer.style.backgroundColor = 'transparent';
         showSearchInputContainer.style.boxShadow = 'none';
     }
+}
+
+// 设置搜索引擎并同步单选框
+function setSearchEngine(engine) {
+    currentEngine = engine;
+    searchEngineRadios.forEach(radio => {
+        radio.checked = radio.value === engine;
+    });
+    // 同步搜索框下方按钮组
+    searchEngineQuickRadios.forEach(radio => {
+        radio.checked = radio.value === engine;
+    });
+}
+
+// 自定义确认对话框
+function customConfirm(message, onOk, onCancel) {
+    const modal = document.getElementById('custom-modal');
+    const msg = document.getElementById('custom-modal-message');
+    const okBtn = document.getElementById('custom-modal-ok');
+    const cancelBtn = document.getElementById('custom-modal-cancel');
+
+    msg.textContent = message;
+    modal.classList.remove('hidden');
+
+    function cleanup() {
+        okBtn.onclick = null;
+        cancelBtn.onclick = null;
+        modal.classList.add('hidden');
+    }
+
+    okBtn.onclick = () => {
+        cleanup();
+        if (onOk) onOk();
+    };
+    cancelBtn.onclick = () => {
+        cleanup();
+        if (onCancel) onCancel();
+    };
 }
 
 // 页面加载完成后初始化

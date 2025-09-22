@@ -28,7 +28,30 @@
                 </div>
             </div>
 
+            <!-- 占位用的空div -->
             <div class="title-div"></div>
+
+            <!-- 必应信息按钮 -->
+            <button id="bg-info-btn" class="bg-info-btn">
+                <i class="fas fa-info-circle"></i>
+            </button>
+
+            <!-- 搜索引擎切换按钮紧挨着设置按钮左侧 -->
+            <div class="engine-switcher-container">
+
+                <button id="engine-switcher-btn" class="engine-switcher-btn">
+                    <span id="engine-switcher-name"></span>
+                    <i id="engine-switcher-caret" class="fas fa-caret-down"></i>
+                </button>
+
+                <div id="engine-switcher-dropdown" class="engine-switcher-dropdown hidden">
+                    <div class="engine-option" data-engine="google">Google</div>
+                    <div class="engine-option" data-engine="bing">Bing</div>
+                    <div class="engine-option" data-engine="yandex">Yandex</div>
+                    <div class="engine-option" data-engine="baidu">Baidu</div>
+                </div>
+            </div>
+
             <!-- 设置按钮 -->
             <button id="settings-btn" class="settings-btn">
                 <i class="fas fa-cog"></i>
@@ -41,13 +64,14 @@
         <form id="search-form" class="search-form" autocomplete="off">
             <div class="search-box">
                 <div class="search-input-container" id="search-input-container">
-                    <input type="text" id="search-input" class="search-input" placeholder="加载中……" autocomplete="off" autocapitalize="off" spellcheck="false" />
+                    <input type="text" id="search-input" class="search-input" placeholder="加载中……" autocomplete="off"
+                        autocapitalize="off" spellcheck="false" />
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search"></i>
+                        <span class="search-btn-text">搜索</span>
+                    </button>
                 </div>
                 <div id="search-history-list" class="search-history-list"></div>
-                <button type="submit" class="search-btn">
-                    <i class="fas fa-search"></i>
-                    <span class="search-btn-text">搜索</span>
-                </button>
             </div>
         </form>
     </div>
@@ -91,7 +115,13 @@
                     </label>
                 </div>
 
-
+                <div class="setting-item" style="margin-top: 5px;">
+                    <label class="setting-label">启用搜索引擎快速切换</label>
+                    <label class="switch">
+                        <input type="checkbox" id="engine-switch-toggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
 
             <hr class="section-divider">
@@ -109,7 +139,7 @@
                 <div class="setting-item">
                     <label class="setting-label">最多可以保存10条历史记录</label>
                     <label id="clear-history-btn" class="clear-history-btn">
-                        <i class="fas fa-trash"></i> 清除历史记录
+                        <i class="fas fa-trash"></i> 清除全部历史记录
                     </label>
                 </div>
             </div>
@@ -151,6 +181,7 @@
                         <span class="slider round"></span>
                     </label>
                 </div>
+
                 <div class="setting-item">
                     <label class="setting-label" for="custom-title-input">自定义标题文字</label>
                     <input type="text" id="custom-title-input" class="text-input" placeholder="请输入标题文字">
@@ -211,6 +242,14 @@
                         <span style="color: var(--theme-color);">不透明</span>
                     </div>
                 </div>
+
+                <div class="setting-item">
+                    <label class="setting-label">启用背景信息查看</label>
+                    <label class="switch">
+                        <input type="checkbox" id="bg-info-toggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
 
             <hr class="section-divider">
@@ -269,12 +308,6 @@
                         <i class="fas fa-download"></i> 导出
                     </label>
                 </div>
-                <div class="setting-item">
-                    <label class="setting-label">重置</label>
-                    <button id="reset-settings" class="reset-btn">
-                        <i class="fas fa-redo"></i> 重置为默认值
-                    </button>
-                </div>
             </div>
 
             <hr class="section-divider">
@@ -283,48 +316,86 @@
             <div class="settings-section">
                 <h3>关于</h3>
                 <div class="setting-item">
+                    <img src="./assets/logo_blue_long.png" alt="星函标签页"
+                        style="display:block;max-width:220px;margin:0 auto 18px auto;">
                     <label class="setting-label" style="font-weight: 700;">星函标签页<br>STARPLEX TAB</label>
-                    <label class="setting-label">让你的新标签页从此兼得简洁与实用</label>
+                    <label class="setting-label">一个简洁而实用的新标签页扩展插件</label>
                     <label class="setting-label" style="width: 100%; display: flex;">
                         <label style="width: 50%; text-align: left;">版本</label>
-                        <label style="width: 50%; text-align: right;">1.1.27</label>
+                        <label style="width: 50%; text-align: right;">1.2.18</label>
                     </label>
                     <label class="setting-label" style="width: 100%; display: flex;">
-                        <label style="width: 50%; text-align: left;">制作</label>
+                        <label style="width: 50%; text-align: left;">作者</label>
                         <label style="width: 50%; text-align: right;">Jance</label>
                     </label>
                     <label class="setting-label" style="width: 100%; display: flex;">
                         <label style="width: 50%; text-align: left;">更新日志</label>
-                        <label style="width: 50%; text-align: right;"><a href="./log.html">点击查看</a></label>
+                        <label style="width: 50%; text-align: right;">
+                            <a href="./log.html" class="about-link-btn"><i class="fas fa-book"></i> 点击查看</a>
+                        </label>
+                    </label>
+                    <label class="setting-label" style="width: 100%; display: flex;">
+                        <label style="width: 50%; text-align: left;">开源项目地址</label>
+                        <label style="width: 50%; text-align: right;">
+                            <a href="https://github.com/JanceHsu/StarplexTab" class="about-link-btn" target="_blank">
+                                <i class="fab fa-github"></i> 点击前往
+                            </a>
+                        </label>
                     </label>
                 </div>
             </div>
 
-            <!-- <hr class="section-divider"> -->
+            <hr class="section-divider">
 
             <!-- 版权信息 -->
-            <!-- <div class="settings-section">
+            <div class="settings-section">
+                <h3>版权信息</h3>
                 <div class="setting-item">
                     <label class="setting-label" style="width: 100%; display: flex;">
-                        <label
-                            style="width: 100%; text-align: left;">使用“星函标签页”插件即代表您了解：“星函标签页”插件仅供学习交流使用，禁止用于商业用途。</label>
+                        <label style="width: 100%; text-align: left;">使用“星函标签页”插件，即代表您了解：</label>
+                    </label>
+                    <label class="setting-label" style="width: 100%; display: flex;">
+                        <label style="width: 100%; text-align: left;">“星函标签页”插件仅供学习交流使用，不得进行任何商业性质的活动。</label>
+                    </label>
+                    <label class="setting-label" style="width: 100%; display: flex;">
+                        <label style="width: 100%; text-align: left;">“星函标签页”插件是开源项目，遵循 MIT
+                            开源协议，允许二次开发和进行非商业性质的宣发活动。在二次开发后，应当注明“星函标签页”项目的仓库地址和作者信息。</label>
                     </label>
                     <label class="setting-label" style="width: 100%; display: flex;">
                         <label
-                            style="width: 100%; text-align: left;">本插件使用的“每日一图”来自微软必应壁纸，仅作为本插件的可选壁纸使用，不用于其他用途。</label>
+                            style="width: 100%; text-align: left;">“星函标签页”插件中，“每日一图”功能所需的图片来自微软必应壁纸，相关图片仅作为本插件的可选壁纸使用，不用于任何商业性质的活动。相关图片的版权信息，请点击每日一图背景信息查阅。</label>
                     </label>
                 </div>
-            </div> -->
+            </div>
 
         </div>
 
         <div class="settings-footer">
-            <button id="apply-settings" class="apply-settings-btn">保存设置</button>
+            <button id="reset-settings" class="reset-btn">
+                <i class="fas fa-redo"></i> 重置设置
+            </button>
+            <button id="apply-settings" class="apply-settings-btn">
+                <i class="fas fa-save"></i> 保存设置
+            </button>
         </div>
     </div>
 
     <!-- 提示框 -->
     <div id="toast" class="toast hidden"></div>
+
+    <!-- 自定义弹窗 -->
+    <div id="custom-modal" class="custom-modal hidden">
+        <div class="custom-modal-mask"></div>
+        <div class="custom-modal-dialog">
+            <div class="custom-modal-content">
+                <div id="custom-modal-message" class="custom-modal-message"></div>
+                <div class="custom-modal-actions">
+                    <button id="custom-modal-cancel" class="custom-modal-btn cancel">取消</button>
+                    <button id="custom-modal-ok" class="custom-modal-btn ok">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
     <script src="settings.js"></script>

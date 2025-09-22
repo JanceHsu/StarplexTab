@@ -12,6 +12,8 @@ function saveSettings() {
         showTitle: showTitle,
         customTitleText: customTitleText,
         showSearchHistoryEnabled: showSearchHistoryEnabled,
+        engineSwitchEnabled: engineSwitchEnabled,
+        bgInfoEnabled: bgInfoEnabled,
     };
     localStorage.setItem('searchPageSettings', JSON.stringify(settings));
 }
@@ -120,9 +122,24 @@ function loadSettings() {
             showTitleToggle.checked = showTitle;
         }
 
+        // 加载自定义标题文本
         if (settings.customTitleText) {
             customTitleText = settings.customTitleText;
             customTitleInput.value = customTitleText;
+        }
+
+        // 加载搜索引擎切换器设置
+        if (settings.engineSwitchEnabled !== undefined) {
+            engineSwitchEnabled = settings.engineSwitchEnabled;
+            engineSwitchToggle.checked = engineSwitchEnabled;
+            updateEngineSwitcherVisible();
+        }
+
+        // 加载必应图片信息显示设置
+        if (settings.bgInfoEnabled !== undefined) {
+            bgInfoEnabled = settings.bgInfoEnabled;
+            bgInfoToggle.checked = bgInfoEnabled;
+            updateBgInfoBtnVisible();
         }
 
         updateTitleDisplay();
@@ -172,7 +189,7 @@ function loadSettings() {
 
 // 重置设置为默认值
 function resetSettings() {
-    if (confirm('确定要重置所有设置吗？')) {
+    customConfirm('确定要重置所有设置吗？', () => {
         // 清除本地存储
         localStorage.removeItem('searchPageSettings');
         localStorage.removeItem('customBgImage');
@@ -189,6 +206,10 @@ function resetSettings() {
         showTitle = true;
         customTitleText = '星函标签页';
         showSearchHistoryEnabled = true;
+        engineSwitchEnabled = true;
+        bgInfoEnabled = true;
+        engineSwitchToggle.checked = true;
+        bgInfoToggle.checked = true;
 
         // 重置UI
         setSearchEngine('bing');
@@ -213,6 +234,9 @@ function resetSettings() {
         // 设置搜索引擎提示
         setSearchEngineName();
 
+        // 更新搜索引擎切换器UI
+        updateEngineSwitcherUI();
+
         quickLinksToggle.checked = true;
         updateQuickLinksToggleUI();
 
@@ -233,17 +257,29 @@ function resetSettings() {
         updateDisplayMode();
 
         // 刷新必应图片
-        // fetchBingImage();
+        fetchBingImage();
 
         // 更新链接编辑器
         updateQuickLinksEditor();
 
+        // 更新搜索引擎切换器
+        updateEngineSwitcherVisible();
+
+        // 更新必应图片信息显示
+        updateBgInfoBtnVisible();
+
+        // 保存重置后的设置
+        saveSettings();
+
         // 显示提示
         showToast('已重置为默认设置');
 
+        // 清空备份并关闭面板，防止被预览机制还原
+        settingsBackup = null;
+
         //收起设置面板
         closeSettings();
-    }
+    });
 }
 
 // 导出设置
@@ -305,6 +341,7 @@ function importSettings(e) {
 
                 // 设置搜索引擎提示
                 setSearchEngineName();
+                updateEngineSwitcherUI();
             }
 
             if (settings.bgType) {
@@ -376,8 +413,25 @@ function importSettings(e) {
                 updateSearchHistoryDisplay();
             }
 
+            if (settings.engineSwitchEnabled !== undefined) {
+                engineSwitchEnabled = settings.engineSwitchEnabled;
+                engineSwitchToggle.checked = engineSwitchEnabled;
+                updateEngineSwitcherVisible();
+            }
+
+            if (settings.bgInfoEnabled !== undefined) {
+                bgInfoEnabled = settings.bgInfoEnabled;
+                bgInfoToggle.checked = bgInfoEnabled;
+                updateBgInfoBtnVisible();
+            }
+
             saveSettings();
             showToast('设置已导入');
+
+            // 关键：清空备份并关闭面板，防止被预览机制还原
+            settingsBackup = null;
+
+            closeSettings();
         } catch (error) {
             console.error('导入设置失败:', error);
             showToast('导入失败，请检查文件格式');
